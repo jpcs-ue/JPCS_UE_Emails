@@ -1,0 +1,2142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JPCS Email Editor</title>
+
+    <!-- Typography: Nunito for friendly rounded UI chrome; Roboto fonts for 1:1 email fidelity -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Roboto+Condensed:wght@300;400;700&family=Roboto+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --primary-orange: #ff6b35;
+            --primary-orange-hover: #fa5719;
+            --primary-orange-light: rgba(255, 107, 53, 0.12);
+            --primary-orange-glow: rgba(255, 107, 53, 0.38);
+            --navy-dark: #0f172a;
+            --navy-header: #1e293b;
+            --navy-muted: #64748b;
+            --navy-light: #94a3b8;
+            --bg-canvas: #f0f2f7;
+            --bg-card: #ffffff;
+            --border-soft: #eef0f3;
+            --shadow-card: 0 4px 18px rgba(35, 47, 70, 0.05);
+            --shadow-input: 0 2px 8px rgba(35, 47, 70, 0.04);
+            --shadow-float: 0 16px 48px rgba(35, 47, 70, 0.12), 0 3px 10px rgba(0, 0, 0, 0.04);
+            --radius-input: 12px;
+            --radius-card: 20px;
+            --radius-pill: 999px;
+            --radius-preview: 24px;
+        }
+
+        body {
+            font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background-color: #171b26;
+            color: var(--navy-dark);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Top Navigation Bar */
+        .app-header {
+            background-color: #1e2433;
+            color: #ffffff;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 10px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+            z-index: 30;
+            gap: 16px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-title {
+            font-family: 'Nunito', sans-serif;
+            font-size: 17px;
+            font-weight: 800;
+            letter-spacing: -0.2px;
+            color: #ffffff;
+        }
+
+        .header-subtitle {
+            font-family: 'Nunito', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            color: #94a3b8;
+            border-left: 1px solid rgba(255, 255, 255, 0.15);
+            padding-left: 12px;
+        }
+
+        .save-indicator {
+            font-family: 'Nunito', sans-serif;
+            font-size: 12px;
+            font-weight: 700;
+            color: #94a3b8;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding-left: 6px;
+            transition: color 0.2s ease;
+        }
+
+        .save-indicator svg {
+            stroke: #10b981;
+            transition: stroke 0.2s ease;
+        }
+
+        .tab-switcher {
+            display: flex;
+            background-color: #131722;
+            padding: 4px;
+            border-radius: var(--radius-pill);
+            gap: 4px;
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            font-size: 13px;
+            font-weight: 700;
+            padding: 8px 18px;
+            border-radius: var(--radius-pill);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: inherit;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tab-btn:hover {
+            color: #ffffff;
+            transform: scale(1.02);
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+            color: #ffffff;
+            box-shadow: 0 2px 10px rgba(255, 107, 53, 0.35);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .action-group {
+            display: flex;
+            align-items: center;
+            background-color: #131722;
+            border-radius: var(--radius-pill);
+            padding: 3px;
+            gap: 2px;
+        }
+
+        .btn {
+            border: none;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 700;
+            padding: 8px 18px;
+            border-radius: var(--radius-pill);
+            transition: all 0.2s ease;
+            font-family: inherit;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn:hover {
+            transform: scale(1.03);
+        }
+
+        .btn-primary {
+            background-color: #10b981;
+            color: #ffffff;
+            box-shadow: 0 2px 10px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-primary:hover {
+            background-color: #059669;
+            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-group-item {
+            background: transparent;
+            border: none;
+            color: #cbd5e1;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 6px 14px;
+            border-radius: var(--radius-pill);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: inherit;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-group-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            transform: scale(1.02);
+        }
+
+        /* Workspace Split */
+        .workspace {
+            display: flex;
+            flex: 1;
+            min-height: 0;
+            overflow: hidden;
+            background-color: var(--bg-canvas);
+        }
+
+        /* Sidebar Editor */
+        .editor-sidebar {
+            width: 500px;
+            background-color: #f8fafc;
+            border-right: 1px solid var(--border-soft);
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .sidebar-header-bar {
+            padding: 16px 22px;
+            background-color: #ffffff;
+            border-bottom: 1px solid var(--border-soft);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            flex-shrink: 0;
+        }
+
+        .sidebar-title-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Type Scale: Level 1 Page Title */
+        .sidebar-header-bar h2 {
+            font-size: 20px;
+            font-weight: 800;
+            letter-spacing: -0.3px;
+            color: var(--navy-dark);
+        }
+
+        .collapse-toggle-btn {
+            background-color: #f1f5f9;
+            border: 1px solid var(--border-soft);
+            border-radius: var(--radius-pill);
+            color: var(--navy-muted);
+            font-size: 11px;
+            font-weight: 700;
+            padding: 5px 14px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s ease;
+        }
+
+        .collapse-toggle-btn:hover {
+            background-color: #e2e8f0;
+            color: var(--navy-dark);
+            transform: scale(1.03);
+        }
+
+        .search-box {
+            position: relative;
+            width: 100%;
+        }
+
+        .search-input {
+            width: 100%;
+            background-color: #f8fafc;
+            border: 1px solid var(--border-soft);
+            border-radius: var(--radius-pill);
+            box-shadow: var(--shadow-input);
+            padding: 8px 14px 8px 36px;
+            font-size: 13px;
+            font-family: inherit;
+            font-weight: 600;
+            color: var(--navy-dark);
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .search-box:focus-within .search-icon {
+            stroke: var(--primary-orange);
+        }
+
+        .search-input:focus {
+            background-color: #ffffff;
+            border-color: var(--primary-orange);
+            box-shadow: 0 0 0 3px var(--primary-orange-light);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            stroke: #94a3b8;
+            pointer-events: none;
+            transition: stroke 0.2s ease;
+        }
+
+        /* Inter-section spacing: 26px gap visually separates distinct cards */
+        .sidebar-content {
+            padding: 22px;
+            overflow-y: auto;
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 26px;
+        }
+
+        /* Soft Rounded Section Cards */
+        .section-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-soft);
+            border-radius: var(--radius-card);
+            box-shadow: var(--shadow-card);
+            flex-shrink: 0;
+            transition: all 0.2s ease;
+            overflow: hidden;
+        }
+
+        /* Section Theme Color Tokens */
+        .section-card[data-theme="orange"] { --sec-color: #ff6b35; --sec-bg: rgba(255, 107, 53, 0.12); }
+        .section-card[data-theme="teal"]   { --sec-color: #0d9488; --sec-bg: rgba(13, 148, 136, 0.12); }
+        .section-card[data-theme="blue"]   { --sec-color: #2563eb; --sec-bg: rgba(37, 99, 235, 0.12); }
+        .section-card[data-theme="purple"] { --sec-color: #7c3aed; --sec-bg: rgba(124, 58, 237, 0.12); }
+        .section-card[data-theme="amber"]  { --sec-color: #d97706; --sec-bg: rgba(217, 119, 6, 0.12); }
+
+        .section-card:hover {
+            box-shadow: 0 6px 22px rgba(35, 47, 70, 0.07);
+        }
+
+        .section-header {
+            padding: 16px 20px;
+            background-color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            user-select: none;
+            transition: background-color 0.2s ease;
+        }
+
+        .section-header:hover {
+            background-color: #fafbfc;
+        }
+
+        /* Type Scale: Level 2 Section Header */
+        .section-title {
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: -0.1px;
+            color: #334155;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* Circular Icon Badge: Distinct color per section, filled when expanded, soft tint when collapsed */
+        .section-icon-badge {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.25s ease;
+        }
+
+        .section-card:not(.collapsed) .section-icon-badge {
+            background-color: var(--sec-color, #ff6b35);
+            color: #ffffff;
+            box-shadow: 0 2px 8px var(--sec-bg, rgba(255, 107, 53, 0.35));
+        }
+
+        .section-card:not(.collapsed) .section-icon-badge svg {
+            stroke: #ffffff;
+        }
+
+        .section-card.collapsed .section-icon-badge {
+            background-color: var(--sec-bg, rgba(255, 107, 53, 0.12));
+            color: var(--sec-color, #ff6b35);
+        }
+
+        .section-card.collapsed .section-icon-badge svg {
+            stroke: var(--sec-color, #ff6b35);
+        }
+
+        .section-toggle-icon {
+            stroke: #94a3b8;
+            transition: transform 0.25s ease;
+        }
+
+        .section-card.collapsed .section-toggle-icon {
+            transform: rotate(180deg);
+        }
+
+        .section-card.collapsed .section-body {
+            display: none;
+        }
+
+        /* Intra-card field spacing: 14px gap */
+        .section-body {
+            padding: 6px 20px 20px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            background-color: #ffffff;
+        }
+
+        /* Form Controls */
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .label-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: default;
+        }
+
+        /* Type Scale: Level 3 Field Label (Quiet Muted Gray) */
+        .form-group label {
+            font-size: 12.5px;
+            font-weight: 600;
+            color: var(--navy-muted);
+            letter-spacing: 0;
+            transition: color 0.2s ease;
+        }
+
+        .char-counter {
+            font-size: 11px;
+            font-weight: 700;
+            color: #94a3b8;
+            transition: color 0.2s ease;
+        }
+
+        .char-counter.warning {
+            color: #dc2626;
+            font-weight: 800;
+        }
+
+        /* Type Scale: Level 4 Input Value (High Contrast Dark Navy) */
+        .form-group input[type="text"],
+        .form-group input[type="url"],
+        .form-group input[type="date"],
+        .form-group input[type="time"],
+        .form-group select,
+        .form-group textarea,
+        .rich-editor-box {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--navy-dark);
+            background-color: #f8fafc;
+            border: 1px solid var(--border-soft);
+            border-radius: var(--radius-input);
+            box-shadow: var(--shadow-input);
+            padding: 10px 14px;
+            outline: none;
+            transition: all 0.2s ease;
+            width: 100%;
+            display: block;
+        }
+
+        .form-group select {
+            cursor: pointer;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+            padding-right: 36px;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus,
+        .rich-editor-box:focus {
+            border-color: var(--primary-orange);
+            background-color: #ffffff;
+            box-shadow: 0 0 0 3px var(--primary-orange-light);
+        }
+
+        .form-group input.input-warning {
+            border-color: #dc2626 !important;
+            background-color: #fef2f2 !important;
+            box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15) !important;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 76px;
+            line-height: 1.5;
+        }
+
+        /* WYSIWYG ContentEditable Box */
+        .rich-editor-box {
+            min-height: 76px;
+            line-height: 1.5;
+            cursor: text;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .rich-editor-box b,
+        .rich-editor-box strong {
+            font-weight: 800;
+            color: #0f172a;
+        }
+
+        .rich-editor-box i,
+        .rich-editor-box em {
+            font-style: italic;
+        }
+
+        /* Format Toolbar */
+        .format-toolbar {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 2px;
+        }
+
+        .format-btn {
+            background-color: #f1f5f9;
+            border: 1px solid var(--border-soft);
+            color: var(--navy-dark);
+            font-size: 11px;
+            font-weight: 800;
+            padding: 3px 12px;
+            border-radius: var(--radius-pill);
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s ease;
+        }
+
+        .format-btn:hover {
+            background-color: #e2e8f0;
+            transform: scale(1.05);
+        }
+
+        .format-hint {
+            font-size: 11px;
+            font-weight: 600;
+            color: #94a3b8;
+            margin-left: auto;
+        }
+
+        /* Date & Time Picker Grid */
+        .datetime-grid {
+            display: grid;
+            grid-template-columns: 1.3fr 1fr 1fr;
+            gap: 8px;
+        }
+
+        .datetime-sub {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .datetime-sub label {
+            font-size: 10px;
+            color: var(--navy-muted);
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        /* Unified Live Computed Preview Line (Left Accent Bar) */
+        .computed-preview-note {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--navy-muted);
+            margin-top: 4px;
+            padding: 8px 12px;
+            background-color: #f8fafc;
+            border-radius: var(--radius-input);
+            border-left: 3px solid var(--primary-orange);
+            box-shadow: var(--shadow-input);
+            line-height: 1.4;
+        }
+
+        /* URL Field with Inline Copy */
+        .url-input-wrap {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .url-input-wrap input {
+            padding-right: 80px !important;
+        }
+
+        .url-actions {
+            position: absolute;
+            right: 6px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .url-copy-btn {
+            background-color: #f1f5f9;
+            border: 1px solid var(--border-soft);
+            border-radius: var(--radius-pill);
+            color: var(--navy-muted);
+            padding: 4px 8px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .url-copy-btn:hover {
+            background-color: #e2e8f0;
+            color: var(--navy-dark);
+            transform: scale(1.05);
+        }
+
+        .url-status-badge {
+            font-size: 9px;
+            font-weight: 800;
+            padding: 2px 6px;
+            border-radius: var(--radius-pill);
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .url-status-badge.valid {
+            background-color: #ecfdf5;
+            color: #059669;
+        }
+
+        .url-status-badge.invalid {
+            background-color: #fef2f2;
+            color: #dc2626;
+        }
+
+        /* Preview Pane with Guaranteed Natural Scroll */
+        .preview-pane {
+            flex: 1;
+            background-color: var(--bg-canvas);
+            overflow-y: auto;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 24px 24px 100px 24px;
+        }
+
+        /* Preview Controls */
+        .preview-top-bar {
+            width: 100%;
+            max-width: 600px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: max-width 0.25s ease;
+            flex-shrink: 0;
+        }
+
+        .preview-top-bar.mobile {
+            max-width: 375px;
+        }
+
+        .preview-label {
+            font-size: 12px;
+            font-weight: 800;
+            color: var(--navy-muted);
+            letter-spacing: 0.3px;
+        }
+
+        .device-toggle-group {
+            display: flex;
+            background-color: #e2e8f0;
+            padding: 3px;
+            border-radius: var(--radius-pill);
+            gap: 2px;
+        }
+
+        .device-btn {
+            border: none;
+            background: transparent;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--navy-muted);
+            padding: 6px 14px;
+            border-radius: var(--radius-pill);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-family: inherit;
+            transition: all 0.2s ease;
+        }
+
+        .device-btn svg {
+            stroke: currentColor;
+        }
+
+        /* Active device toggle: vibrant orange gradient matching main tabs */
+        .device-btn.active {
+            background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+            color: #ffffff;
+            box-shadow: 0 2px 8px rgba(255, 107, 53, 0.32);
+        }
+
+        .device-btn.active svg {
+            stroke: #ffffff;
+        }
+
+        /* Preview Floating Document Container (24px Radius + Deep Soft Shadow) */
+        .preview-wrapper {
+            width: 100%;
+            max-width: 600px;
+            background-color: #ffffff;
+            border-radius: var(--radius-preview);
+            box-shadow: var(--shadow-float);
+            border: 1px solid var(--border-soft);
+            transition: max-width 0.25s ease;
+            overflow: hidden;
+            margin-bottom: 60px;
+            flex-shrink: 0;
+        }
+
+        .preview-wrapper.mobile {
+            max-width: 375px;
+        }
+
+        /* -------------------------------------------------------------
+           Live Highlight Sync: High Visibility Glow, Outline & 2-Pulse
+           ------------------------------------------------------------- */
+        .preview-field-highlight {
+            display: inline-block !important;
+            outline: 2px solid var(--primary-orange) !important;
+            box-shadow: 0 0 0 4px var(--primary-orange-glow), 0 4px 14px rgba(255, 107, 53, 0.3) !important;
+            background-color: rgba(255, 107, 53, 0.14) !important;
+            border-radius: 6px !important;
+            padding: 2px 6px !important;
+            margin: -2px 0 !important;
+            transition: all 0.2s ease !important;
+            animation: pulse-preview-highlight 0.7s ease-in-out 2 !important;
+        }
+
+        @keyframes pulse-preview-highlight {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+        }
+
+        /* -------------------------------------------------------------
+           1:1 Email Typography & Scoped Styles for Preview Content
+           ------------------------------------------------------------- */
+        #preview-content {
+            font-family: 'Roboto Condensed', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+            color: #333333;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        #preview-content table {
+            border-collapse: collapse;
+        }
+
+        #preview-content p {
+            margin: 0 0 20px 0;
+            font-size: 16px;
+            line-height: 1.6;
+            color: #444444;
+            text-align: justify;
+            font-family: 'Roboto Condensed', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+        }
+
+        #preview-content strong {
+            color: #111111;
+            font-weight: 700;
+        }
+
+        #preview-content .mono {
+            font-family: 'Roboto Mono', Consolas, monospace !important;
+        }
+
+        #preview-content .accent-border {
+            border-left: 2px solid #ff6b35;
+            padding-left: 20px;
+            margin-bottom: 30px;
+        }
+
+        /* Mobile Simulation Styles */
+        .preview-wrapper.mobile .email-container {
+            width: 100% !important;
+            max-width: 100% !important;
+            border-radius: 0 !important;
+            border: none !important;
+        }
+
+        .preview-wrapper.mobile .pad-container {
+            padding: 25px 18px !important;
+        }
+
+        .preview-wrapper.mobile .btn-table {
+            width: 100% !important;
+        }
+
+        .preview-wrapper.mobile .btn-cell {
+            display: block !important;
+            width: 100% !important;
+            padding-right: 0 !important;
+            padding-bottom: 12px !important;
+        }
+
+        /* Toast Feedback */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--navy-dark);
+            color: #ffffff;
+            padding: 10px 22px;
+            border-radius: var(--radius-pill);
+            font-size: 13px;
+            font-weight: 700;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+            display: none;
+            z-index: 1000;
+        }
+
+        @media (max-width: 900px) {
+            .workspace {
+                flex-direction: column;
+            }
+            .editor-sidebar {
+                width: 100%;
+                height: 50%;
+                border-right: none;
+                border-bottom: 1px solid var(--border-soft);
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="app-header">
+        <div class="header-left">
+            <div class="header-title">JPCS Email Editor</div>
+            <div class="header-subtitle">UE Manila Chapter</div>
+            <div class="save-indicator">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span id="save-label">Saved</span>
+            </div>
+        </div>
+
+        <div class="tab-switcher">
+            <button type="button" class="tab-btn active" id="tab-event" onclick="switchTemplate('event')">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                Event Attendance
+            </button>
+            <button type="button" class="tab-btn" id="tab-membership" onclick="switchTemplate('membership')">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                Membership Confirmation
+            </button>
+        </div>
+
+        <div class="header-actions">
+            <div class="action-group">
+                <button type="button" class="btn-group-item" onclick="reloadFromDisk()" title="Reload template from disk">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
+                    Reload
+                </button>
+                <button type="button" class="btn-group-item" onclick="resetToDefaults()" title="Reset all fields to defaults">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
+                    Reset
+                </button>
+                <button type="button" class="btn-group-item" onclick="downloadHtml()" title="Download standalone HTML file">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                    Download
+                </button>
+            </div>
+
+            <button type="button" class="btn btn-primary" onclick="copyForGmail()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                Copy for Gmail
+            </button>
+        </div>
+    </header>
+
+    <main class="workspace">
+        <aside class="editor-sidebar">
+            <div class="sidebar-header-bar">
+                <div class="sidebar-title-row">
+                    <h2 id="sidebar-title">Event Attendance Fields</h2>
+                    <button type="button" id="btn-collapse-all" class="collapse-toggle-btn" onclick="toggleAllSections()">Collapse All</button>
+                </div>
+                <div class="search-box">
+                    <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    <input type="text" id="field-search" class="search-input" placeholder="Search fields..." oninput="filterFields(this.value)" />
+                </div>
+            </div>
+
+            <div class="sidebar-content" id="form-container"></div>
+        </aside>
+
+        <section class="preview-pane" id="preview-pane">
+            <div class="preview-top-bar" id="preview-top-bar">
+                <span class="preview-label">Live Email Preview</span>
+                <div class="device-toggle-group">
+                    <button type="button" class="device-btn active" id="btn-view-desktop" onclick="setDeviceView('desktop')">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+                        Desktop (600px)
+                    </button>
+                    <button type="button" class="device-btn" id="btn-view-mobile" onclick="setDeviceView('mobile')">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
+                        Mobile (375px)
+                    </button>
+                </div>
+            </div>
+
+            <!-- Email container with 24px border radius, deep shadow, and natural scroll -->
+            <div class="preview-wrapper" id="preview-wrapper">
+                <div id="preview-content"></div>
+            </div>
+        </section>
+    </main>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+    // Master data structure with section groupings and harmonic theme colors
+    const templateDefs = {
+        event: {
+            title: "Event Attendance Fields",
+            file: "event_email.html",
+            sections: [
+                {
+                    id: "recipient",
+                    title: "Recipient Information",
+                    theme: "orange",
+                    icon: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>',
+                    fields: [
+                        { key: "recipientName", label: "Attendee Full Name", type: "text", default: "Bryan D. Esico" },
+                        { key: "heading", label: "Email Heading", type: "text", maxWarn: 50, default: "Thank You for Attending" }
+                    ]
+                },
+                {
+                    id: "details",
+                    title: "Event Details",
+                    theme: "teal",
+                    icon: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>',
+                    fields: [
+                        { key: "eventTopic", label: "Event Topic", type: "text", default: "Getting Started with Blockchain: Guided Learning for Career Impact" },
+                        { key: "eventDateTime", label: "Date & Time", type: "datetime", default: "April 6, 2026 (Monday) • 12:00 PM to 4:30 PM", dateDefault: "2026-04-06", startDefault: "12:00", endDefault: "16:30" },
+                        { key: "eventVenue", label: "Venue", type: "text", default: "UE Manila Conference Hall" },
+                        { key: "eventOrganizers", label: "Organizers", type: "text", default: "JPCS UE Manila × Bitskwela" }
+                    ]
+                },
+                {
+                    id: "messages",
+                    title: "Messages & Notes",
+                    theme: "purple",
+                    icon: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>',
+                    fields: [
+                        { key: "certMessage", label: "Certificate Note", type: "wysiwyg", default: "As promised, your <strong>Certificate of Participation</strong> is attached to this email." },
+                        { key: "closingMessage", label: "Closing Message", type: "textarea", default: "We hope to see you again in our upcoming talks and workshops. Thank you for continuously growing with our tech community." }
+                    ]
+                },
+                {
+                    id: "meta",
+                    title: "Header & Inbox Preview",
+                    theme: "amber",
+                    icon: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>',
+                    fields: [
+                        { key: "preheader", label: "Inbox Preheader Text", type: "preheader", maxWarn: 90, default: "Thank you for joining Getting Started with Blockchain! Your certificate is attached." },
+                        { key: "logoUrl", label: "Logo URL", type: "url", default: "https://res.cloudinary.com/dqxud41xe/image/upload/v1787746562/logo_x2slja.png" }
+                    ]
+                }
+            ]
+        },
+        membership: {
+            title: "Membership Confirmation Fields",
+            file: "membership_email.html",
+            sections: [
+                {
+                    id: "member",
+                    title: "Member Information",
+                    theme: "orange",
+                    icon: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>',
+                    fields: [
+                        { key: "recipientName", label: "Member Full Name", type: "text", default: "Bryan D. Esico" },
+                        { key: "heading", label: "Email Heading", type: "text", maxWarn: 50, default: "Welcome to JPCS-UE!" }
+                    ]
+                },
+                {
+                    id: "statusCluster",
+                    title: "Membership Status Overview",
+                    theme: "teal",
+                    icon: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>',
+                    fields: [
+                        {
+                            key: "chapterStatus",
+                            label: "Chapter Membership Status",
+                            type: "select",
+                            options: ["Confirmed & Active", "Active Member", "Pending Review", "Inactive", "Custom..."],
+                            default: "Confirmed & Active"
+                        },
+                        {
+                            key: "nationalStatus",
+                            label: "National Application Status",
+                            type: "select",
+                            options: ["Pending Approval", "Approved & Active", "Under Review", "Not Applied", "Custom..."],
+                            default: "Pending Approval"
+                        },
+                        {
+                            key: "activitiesStatus",
+                            label: "Chapter Activities Status",
+                            type: "select",
+                            options: ["Full Access Unlocked", "Partial Access", "Restricted", "Custom..."],
+                            default: "Full Access Unlocked"
+                        }
+                    ]
+                },
+                {
+                    id: "channels",
+                    title: "Community Channels",
+                    theme: "blue",
+                    icon: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>',
+                    fields: [
+                        { key: "discordUrl", label: "Discord Invite URL", type: "url", default: "https://discord.gg/2dVjQFZS" },
+                        { key: "messengerUrl", label: "Messenger Group URL", type: "url", default: "https://m.me/j/Abbwa1PpNj-yCLQ1/" }
+                    ]
+                },
+                {
+                    id: "messages",
+                    title: "Messages & Notes",
+                    theme: "purple",
+                    icon: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>',
+                    fields: [
+                        { key: "pendingNote", label: "Pending Application Note", type: "textarea", default: "Note: Your membership to JPCS National is currently pending and will be processed shortly. In the meantime, you can enjoy all local chapter benefits." },
+                        { key: "closingMessage", label: "Closing Message", type: "textarea", default: "Thank you for joining. Together, we're building a vibrant community of passionate tech professionals." }
+                    ]
+                },
+                {
+                    id: "meta",
+                    title: "Header & Inbox Preview",
+                    theme: "amber",
+                    icon: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>',
+                    fields: [
+                        { key: "preheader", label: "Inbox Preheader Text", type: "preheader", maxWarn: 90, default: "Welcome to JPCS UE Manila! Your chapter membership is confirmed." },
+                        { key: "logoUrl", label: "Logo URL", type: "url", default: "https://res.cloudinary.com/dqxud41xe/image/upload/v1787746562/logo_x2slja.png" }
+                    ]
+                }
+            ]
+        }
+    };
+
+    // State storage
+    const state = {
+        event: {},
+        membership: {},
+        diskHtml: { event: null, membership: null }
+    };
+
+    let currentTab = 'event';
+    let currentDevice = 'desktop';
+    let allCollapsed = false;
+    let previewDebounceTimer = null;
+    const isServer = window.location.protocol.startsWith('http');
+    const STORAGE_KEY = 'jpcs_email_editor_v7';
+
+    // Initialize state
+    function initState() {
+        const saved = loadFromStorage();
+
+        for (const [tabKey, def] of Object.entries(templateDefs)) {
+            state[tabKey] = {};
+            for (const section of def.sections) {
+                for (const field of section.fields) {
+                    if (saved && saved[tabKey] && saved[tabKey][field.key] !== undefined) {
+                        state[tabKey][field.key] = saved[tabKey][field.key];
+                    } else {
+                        state[tabKey][field.key] = field.default;
+                    }
+                }
+            }
+        }
+    }
+
+    // LocalStorage persistence
+    function saveToStorage() {
+        try {
+            const data = {
+                event: state.event,
+                membership: state.membership
+            };
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+            indicateSaveStatus();
+        } catch (e) {
+            console.warn('LocalStorage save failed:', e);
+        }
+    }
+
+    function loadFromStorage() {
+        try {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            return raw ? JSON.parse(raw) : null;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function indicateSaveStatus() {
+        const label = document.getElementById('save-label');
+        if (label) {
+            label.textContent = 'Saving...';
+            clearTimeout(window._saveTimer);
+            window._saveTimer = setTimeout(() => {
+                label.textContent = 'Saved';
+            }, 400);
+        }
+    }
+
+    // Debounced preview trigger
+    function schedulePreviewUpdate() {
+        clearTimeout(previewDebounceTimer);
+        previewDebounceTimer = setTimeout(() => {
+            renderPreview();
+        }, 120);
+    }
+
+    // Switch active template tab
+    function switchTemplate(tab) {
+        currentTab = tab;
+        document.getElementById('tab-event').classList.toggle('active', tab === 'event');
+        document.getElementById('tab-membership').classList.toggle('active', tab === 'membership');
+        document.getElementById('sidebar-title').textContent = templateDefs[tab].title;
+        document.getElementById('field-search').value = '';
+        allCollapsed = false;
+        updateCollapseAllButton();
+        renderForm();
+        renderPreview();
+    }
+
+    // Toggle Desktop / Mobile View
+    function setDeviceView(device) {
+        currentDevice = device;
+        const wrapper = document.getElementById('preview-wrapper');
+        const topBar = document.getElementById('preview-top-bar');
+        const btnDesktop = document.getElementById('btn-view-desktop');
+        const btnMobile = document.getElementById('btn-view-mobile');
+
+        if (device === 'mobile') {
+            wrapper.classList.add('mobile');
+            topBar.classList.add('mobile');
+            btnMobile.classList.add('active');
+            btnDesktop.classList.remove('active');
+        } else {
+            wrapper.classList.remove('mobile');
+            topBar.classList.remove('mobile');
+            btnDesktop.classList.add('active');
+            btnMobile.classList.remove('active');
+        }
+
+        renderPreview();
+    }
+
+    // Two-way Collapse All / Expand All Toggle
+    function toggleAllSections() {
+        allCollapsed = !allCollapsed;
+        const cards = document.querySelectorAll('.section-card');
+        cards.forEach(card => card.classList.toggle('collapsed', allCollapsed));
+        updateCollapseAllButton();
+    }
+
+    function updateCollapseAllButton() {
+        const btn = document.getElementById('btn-collapse-all');
+        if (btn) {
+            btn.textContent = allCollapsed ? 'Expand All' : 'Collapse All';
+        }
+    }
+
+    // -----------------------------------------------------------------
+    // Live Highlight Sync: High-Visibility Two-Way Visual Linking
+    // -----------------------------------------------------------------
+    function highlightPreviewElement(fieldKey, active) {
+        const preview = document.getElementById('preview-content');
+        if (!preview) return;
+
+        // Date & Time inputs all link to eventDateTime
+        const targetKey = (fieldKey === 'eventDate' || fieldKey === 'eventTimeStart' || fieldKey === 'eventTimeEnd') 
+            ? 'eventDateTime' 
+            : fieldKey;
+
+        const targets = preview.querySelectorAll(`[data-field="${targetKey}"]`);
+        targets.forEach(target => {
+            if (active) {
+                target.classList.add('preview-field-highlight');
+                target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            } else {
+                target.classList.remove('preview-field-highlight');
+            }
+        });
+    }
+
+    // Attach highlight synchronization listeners to form controls
+    function attachHighlightListeners(element, fieldKey) {
+        element.addEventListener('focus', () => highlightPreviewElement(fieldKey, true));
+        element.addEventListener('blur', () => highlightPreviewElement(fieldKey, false));
+        element.addEventListener('mouseenter', () => highlightPreviewElement(fieldKey, true));
+        element.addEventListener('mouseleave', () => {
+            if (document.activeElement !== element) {
+                highlightPreviewElement(fieldKey, false);
+            }
+        });
+    }
+
+    // Render grouped form cards with harmonic colors
+    function renderForm() {
+        const container = document.getElementById('form-container');
+        container.innerHTML = '';
+        const def = templateDefs[currentTab];
+
+        for (const section of def.sections) {
+            const card = document.createElement('div');
+            card.className = 'section-card';
+            card.id = 'section-' + section.id;
+            card.dataset.theme = section.theme || 'orange';
+
+            const header = document.createElement('div');
+            header.className = 'section-header';
+            header.onclick = () => {
+                card.classList.toggle('collapsed');
+                checkAllCollapsedState();
+            };
+
+            const title = document.createElement('div');
+            title.className = 'section-title';
+
+            const badge = document.createElement('div');
+            badge.className = 'section-icon-badge';
+            badge.innerHTML = section.icon;
+
+            const textSpan = document.createElement('span');
+            textSpan.textContent = section.title;
+
+            title.appendChild(badge);
+            title.appendChild(textSpan);
+
+            const toggle = document.createElement('div');
+            toggle.innerHTML = '<svg class="section-toggle-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>';
+
+            header.appendChild(title);
+            header.appendChild(toggle);
+            card.appendChild(header);
+
+            const body = document.createElement('div');
+            body.className = 'section-body';
+
+            for (const field of section.fields) {
+                body.appendChild(createFieldElement(field));
+            }
+
+            card.appendChild(body);
+            container.appendChild(card);
+        }
+    }
+
+    function checkAllCollapsedState() {
+        const cards = document.querySelectorAll('.section-card');
+        const total = cards.length;
+        const collapsedCount = document.querySelectorAll('.section-card.collapsed').length;
+        allCollapsed = collapsedCount === total;
+        updateCollapseAllButton();
+    }
+
+    // Create individual field element
+    function createFieldElement(field) {
+        const group = document.createElement('div');
+        group.className = 'form-group';
+        group.dataset.fieldKey = field.key;
+        group.dataset.searchLabel = field.label.toLowerCase();
+
+        const labelRow = document.createElement('div');
+        labelRow.className = 'label-row';
+
+        const label = document.createElement('label');
+        label.textContent = field.label;
+        label.setAttribute('for', 'field-' + field.key);
+        labelRow.appendChild(label);
+
+        // Character counter
+        let counterSpan = null;
+        if (field.maxWarn) {
+            counterSpan = document.createElement('span');
+            counterSpan.className = 'char-counter';
+            counterSpan.id = 'counter-' + field.key;
+            labelRow.appendChild(counterSpan);
+        }
+
+        group.appendChild(labelRow);
+
+        const currentValue = state[currentTab][field.key] !== undefined ? state[currentTab][field.key] : (field.default || '');
+
+        if (field.type === 'select') {
+            const isPreset = field.options.includes(currentValue) && currentValue !== 'Custom...';
+            const select = document.createElement('select');
+            select.id = 'field-' + field.key;
+
+            for (const opt of field.options) {
+                const optEl = document.createElement('option');
+                optEl.value = opt;
+                optEl.textContent = opt;
+                select.appendChild(optEl);
+            }
+
+            select.value = isPreset ? currentValue : 'Custom...';
+
+            const customInput = document.createElement('input');
+            customInput.type = 'text';
+            customInput.id = 'custom-' + field.key;
+            customInput.className = 'custom-input';
+            customInput.placeholder = 'Enter custom status...';
+            customInput.value = isPreset ? '' : currentValue;
+            customInput.style.display = isPreset ? 'none' : 'block';
+            customInput.style.marginTop = '6px';
+
+            select.addEventListener('change', (e) => {
+                if (e.target.value === 'Custom...') {
+                    customInput.style.display = 'block';
+                    customInput.focus();
+                    state[currentTab][field.key] = customInput.value;
+                } else {
+                    customInput.style.display = 'none';
+                    state[currentTab][field.key] = e.target.value;
+                }
+                saveToStorage();
+                schedulePreviewUpdate();
+            });
+
+            customInput.addEventListener('input', (e) => {
+                state[currentTab][field.key] = e.target.value;
+                saveToStorage();
+                schedulePreviewUpdate();
+            });
+
+            attachHighlightListeners(select, field.key);
+            attachHighlightListeners(customInput, field.key);
+
+            group.appendChild(select);
+            group.appendChild(customInput);
+        } else if (field.type === 'datetime') {
+            // Structured Date & Time Picker
+            const dtGrid = document.createElement('div');
+            dtGrid.className = 'datetime-grid';
+
+            const dateWrap = document.createElement('div');
+            dateWrap.className = 'datetime-sub';
+            const dateLabel = document.createElement('label');
+            dateLabel.textContent = 'Date';
+            const dateInput = document.createElement('input');
+            dateInput.type = 'date';
+            dateInput.id = 'dt-date';
+            dateInput.value = field.dateDefault || '2026-04-06';
+            dateWrap.appendChild(dateLabel);
+            dateWrap.appendChild(dateInput);
+
+            const startWrap = document.createElement('div');
+            startWrap.className = 'datetime-sub';
+            const startLabel = document.createElement('label');
+            startLabel.textContent = 'Start';
+            const startInput = document.createElement('input');
+            startInput.type = 'time';
+            startInput.id = 'dt-start';
+            startInput.value = field.startDefault || '12:00';
+            startWrap.appendChild(startLabel);
+            startWrap.appendChild(startInput);
+
+            const endWrap = document.createElement('div');
+            endWrap.className = 'datetime-sub';
+            const endLabel = document.createElement('label');
+            endLabel.textContent = 'End';
+            const endInput = document.createElement('input');
+            endInput.type = 'time';
+            endInput.id = 'dt-end';
+            endInput.value = field.endDefault || '16:30';
+            endWrap.appendChild(endLabel);
+            endWrap.appendChild(endInput);
+
+            dtGrid.appendChild(dateWrap);
+            dtGrid.appendChild(startWrap);
+            dtGrid.appendChild(endWrap);
+
+            const note = document.createElement('div');
+            note.className = 'computed-preview-note';
+            note.id = 'dt-formatted-preview';
+            note.textContent = currentValue;
+
+            function syncDateTime() {
+                const formatted = formatDateTime(dateInput.value, startInput.value, endInput.value);
+                state[currentTab][field.key] = formatted;
+                note.textContent = formatted;
+                saveToStorage();
+                schedulePreviewUpdate();
+            }
+
+            dateInput.addEventListener('change', syncDateTime);
+            startInput.addEventListener('change', syncDateTime);
+            endInput.addEventListener('change', syncDateTime);
+
+            attachHighlightListeners(dateInput, 'eventDateTime');
+            attachHighlightListeners(startInput, 'eventDateTime');
+            attachHighlightListeners(endInput, 'eventDateTime');
+
+            group.appendChild(dtGrid);
+            group.appendChild(note);
+        } else if (field.type === 'wysiwyg') {
+            // WYSIWYG Inline Formatter (Bolds text visually in the editor)
+            const toolbar = document.createElement('div');
+            toolbar.className = 'format-toolbar';
+
+            const btnB = document.createElement('button');
+            btnB.type = 'button';
+            btnB.className = 'format-btn';
+            btnB.textContent = 'B';
+            btnB.title = 'Make bold (Ctrl+B)';
+
+            const btnI = document.createElement('button');
+            btnI.type = 'button';
+            btnI.className = 'format-btn';
+            btnI.textContent = 'I';
+            btnI.title = 'Make italic (Ctrl+I)';
+
+            const hint = document.createElement('span');
+            hint.className = 'format-hint';
+            hint.textContent = 'Select text and click B to bold';
+
+            toolbar.appendChild(btnB);
+            toolbar.appendChild(btnI);
+            toolbar.appendChild(hint);
+
+            const editor = document.createElement('div');
+            editor.contentEditable = 'true';
+            editor.id = 'field-' + field.key;
+            editor.className = 'rich-editor-box';
+            editor.innerHTML = currentValue;
+
+            btnB.onmousedown = (e) => {
+                e.preventDefault();
+                document.execCommand('bold', false, null);
+                state[currentTab][field.key] = editor.innerHTML;
+                saveToStorage();
+                schedulePreviewUpdate();
+            };
+
+            btnI.onmousedown = (e) => {
+                e.preventDefault();
+                document.execCommand('italic', false, null);
+                state[currentTab][field.key] = editor.innerHTML;
+                saveToStorage();
+                schedulePreviewUpdate();
+            };
+
+            editor.addEventListener('input', () => {
+                state[currentTab][field.key] = editor.innerHTML;
+                saveToStorage();
+                schedulePreviewUpdate();
+            });
+
+            attachHighlightListeners(editor, field.key);
+
+            group.appendChild(toolbar);
+            group.appendChild(editor);
+        } else if (field.type === 'preheader') {
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.id = 'field-' + field.key;
+            input.value = currentValue;
+
+            const previewNote = document.createElement('div');
+            previewNote.className = 'computed-preview-note';
+            previewNote.id = 'preheader-preview-note';
+            previewNote.textContent = 'Inbox Preview: ' + currentValue;
+
+            if (counterSpan) {
+                updateCharCounter(counterSpan, input, currentValue.length, field.maxWarn);
+            }
+
+            input.addEventListener('input', (e) => {
+                state[currentTab][field.key] = e.target.value;
+                previewNote.textContent = 'Inbox Preview: ' + e.target.value;
+                if (counterSpan) {
+                    updateCharCounter(counterSpan, input, e.target.value.length, field.maxWarn);
+                }
+                saveToStorage();
+                schedulePreviewUpdate();
+            });
+
+            attachHighlightListeners(input, field.key);
+
+            group.appendChild(input);
+            group.appendChild(previewNote);
+        } else if (field.type === 'textarea') {
+            const textarea = document.createElement('textarea');
+            textarea.id = 'field-' + field.key;
+            textarea.value = currentValue;
+            textarea.rows = 3;
+
+            textarea.addEventListener('input', (e) => {
+                state[currentTab][field.key] = e.target.value;
+                saveToStorage();
+                schedulePreviewUpdate();
+            });
+
+            attachHighlightListeners(textarea, field.key);
+
+            group.appendChild(textarea);
+        } else if (field.type === 'url') {
+            const wrap = document.createElement('div');
+            wrap.className = 'url-input-wrap';
+
+            const input = document.createElement('input');
+            input.type = 'url';
+            input.id = 'field-' + field.key;
+            input.value = currentValue;
+
+            const actions = document.createElement('div');
+            actions.className = 'url-actions';
+
+            const copyBtn = document.createElement('button');
+            copyBtn.type = 'button';
+            copyBtn.className = 'url-copy-btn';
+            copyBtn.title = 'Copy URL to clipboard';
+            copyBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
+            copyBtn.onclick = () => {
+                navigator.clipboard.writeText(input.value);
+                showToast('URL copied to clipboard');
+            };
+
+            const badge = document.createElement('span');
+            badge.className = 'url-status-badge';
+            badge.id = 'badge-' + field.key;
+            updateUrlBadge(badge, currentValue);
+
+            actions.appendChild(badge);
+            actions.appendChild(copyBtn);
+
+            input.addEventListener('input', (e) => {
+                state[currentTab][field.key] = e.target.value;
+                updateUrlBadge(badge, e.target.value);
+                saveToStorage();
+                schedulePreviewUpdate();
+            });
+
+            attachHighlightListeners(input, field.key);
+
+            wrap.appendChild(input);
+            wrap.appendChild(actions);
+            group.appendChild(wrap);
+        } else {
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.id = 'field-' + field.key;
+            input.value = currentValue;
+
+            if (counterSpan) {
+                updateCharCounter(counterSpan, input, currentValue.length, field.maxWarn);
+            }
+
+            input.addEventListener('input', (e) => {
+                state[currentTab][field.key] = e.target.value;
+                if (counterSpan) {
+                    updateCharCounter(counterSpan, input, e.target.value.length, field.maxWarn);
+                }
+                saveToStorage();
+                schedulePreviewUpdate();
+            });
+
+            attachHighlightListeners(input, field.key);
+
+            group.appendChild(input);
+        }
+
+        return group;
+    }
+
+    // Format Date & Time automatically
+    function formatDateTime(dateStr, startStr, endStr) {
+        if (!dateStr) return 'April 6, 2026 (Monday) • 12:00 PM to 4:30 PM';
+        try {
+            const parts = dateStr.split('-');
+            const d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+            
+            const month = monthNames[d.getMonth()];
+            const day = d.getDate();
+            const year = d.getFullYear();
+            const dayName = dayNames[d.getDay()];
+
+            const formatTime = (tStr) => {
+                if (!tStr) return '';
+                const [h, m] = tStr.split(':').map(Number);
+                const period = h >= 12 ? 'PM' : 'AM';
+                const hr = h % 12 || 12;
+                return hr + ':' + (m < 10 ? '0' + m : m) + ' ' + period;
+            };
+
+            const startFormatted = formatTime(startStr);
+            const endFormatted = formatTime(endStr);
+            const timePart = startFormatted && endFormatted ? (startFormatted + ' to ' + endFormatted) : (startFormatted || endFormatted);
+
+            return month + ' ' + day + ', ' + year + ' (' + dayName + ')' + (timePart ? (' • ' + timePart) : '');
+        } catch (e) {
+            return dateStr + ' • ' + startStr + ' to ' + endStr;
+        }
+    }
+
+    // Update URL validation badge
+    function updateUrlBadge(badge, url) {
+        if (!url || !url.trim()) {
+            badge.textContent = '';
+            badge.className = 'url-status-badge';
+            return;
+        }
+        try {
+            const parsed = new URL(url);
+            if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+                badge.textContent = 'Valid';
+                badge.className = 'url-status-badge valid';
+            } else {
+                badge.textContent = 'Invalid';
+                badge.className = 'url-status-badge invalid';
+            }
+        } catch (e) {
+            badge.textContent = 'Invalid';
+            badge.className = 'url-status-badge invalid';
+        }
+    }
+
+    // Update Character Counter and red border warning
+    function updateCharCounter(span, input, length, maxWarn) {
+        const isOver = length > maxWarn;
+        span.textContent = length + '/' + maxWarn + ' chars';
+        span.classList.toggle('warning', isOver);
+        input.classList.toggle('input-warning', isOver);
+    }
+
+    // Search and filter fields in the sidebar
+    function filterFields(query) {
+        const q = (query || '').toLowerCase().trim();
+        const cards = document.querySelectorAll('.section-card');
+
+        cards.forEach(card => {
+            const groups = card.querySelectorAll('.form-group');
+            let hasVisible = false;
+
+            groups.forEach(group => {
+                const text = group.dataset.searchLabel || '';
+                const matches = !q || text.includes(q);
+                group.style.display = matches ? 'flex' : 'none';
+                if (matches) hasVisible = true;
+            });
+
+            if (q) {
+                card.style.display = hasVisible ? 'block' : 'none';
+                if (hasVisible) card.classList.remove('collapsed');
+            } else {
+                card.style.display = 'block';
+            }
+        });
+
+        checkAllCollapsedState();
+    }
+
+    // Render the live email preview inside native scrollable DOM
+    function renderPreview() {
+        const preview = document.getElementById('preview-content');
+        const f = state[currentTab];
+        const diskHtml = state.diskHtml[currentTab];
+
+        if (diskHtml) {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(diskHtml, 'text/html');
+
+            for (const [key, rawVal] of Object.entries(f)) {
+                const el = doc.getElementById(key);
+                if (el) {
+                    el.setAttribute('data-field', key);
+                    if (el.tagName === 'IMG') {
+                        el.src = rawVal;
+                    } else if (el.tagName === 'A') {
+                        el.href = rawVal;
+                    } else {
+                        el.innerHTML = rawVal;
+                    }
+                }
+            }
+
+            const introTopic = doc.getElementById('eventTopicIntro');
+            if (introTopic && f.eventTopic) {
+                introTopic.setAttribute('data-field', 'eventTopic');
+                introTopic.innerHTML = f.eventTopic;
+            }
+
+            const dtEl = doc.getElementById('eventDate');
+            if (dtEl && f.eventDateTime) {
+                dtEl.setAttribute('data-field', 'eventDateTime');
+                dtEl.innerHTML = f.eventDateTime;
+            }
+
+            preview.innerHTML = doc.body.innerHTML;
+        } else {
+            preview.innerHTML = currentTab === 'event' ? buildEventInnerHtml(f) : buildMembershipInnerHtml(f);
+        }
+    }
+
+    // Inner HTML builder for Event Template (with data-field attributes and 44px 36px padding)
+    function buildEventInnerHtml(f) {
+        const dateText = f.eventDateTime || f.eventDate || 'April 6, 2026 (Monday) • 12:00 PM to 4:30 PM';
+        const certHtml = f.certMessage || 'As promised, your <strong>Certificate of Participation</strong> is attached to this email.';
+
+        return `
+        <div style="display: none; font-size: 1px; line-height: 1px; max-height: 0px; max-width: 0px; opacity: 0; overflow: hidden; font-family: sans-serif;">
+            <span data-field="preheader">${escapeHtml(f.preheader)}</span>
+        </div>
+        <table id="email-table-root" width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f7f7f7; margin: 0; padding: 0; font-family: 'Roboto Condensed', -apple-system, BlinkMacSystemFont, Arial, sans-serif;">
+            <tr>
+                <td align="center" style="padding: 40px 10px;">
+                    <table class="email-container" width="600" border="0" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border: 1px solid #eeeeee; max-width: 600px; width: 100%; border-radius: 12px; overflow: hidden;">
+                        <tr>
+                            <td style="background-color: #f7931e; background: linear-gradient(135deg, #ff6b35 0%, #f7931e 50%, #c41e3a 100%); padding: 35px 30px; text-align: center; border-top-left-radius: 12px; border-top-right-radius: 12px;">
+                                <img id="logoUrl" data-field="logoUrl" src="${escapeHtml(f.logoUrl)}" alt="JPCS Logo" width="75" height="75" style="display: block; margin: 0 auto 14px auto; width: 75px; max-width: 75px; height: 75px; max-height: 75px; border: 0; outline: none;" />
+                                <div style="color: #ffffff; font-family: 'Roboto Condensed', -apple-system, BlinkMacSystemFont, Arial, sans-serif; font-size: 15px; line-height: 1.3; margin-bottom: 2px; font-weight: 300; letter-spacing: 0.2px;">
+                                    University of the East - Manila
+                                </div>
+                                <div style="color: #ffffff; font-family: 'Roboto Condensed', -apple-system, BlinkMacSystemFont, Arial, sans-serif; font-size: 15px; line-height: 1.3; margin-bottom: 8px; font-weight: 300; letter-spacing: 0.2px;">
+                                    College of Computer Studies and Systems
+                                </div>
+                                <div class="mono" style="color: #ffffff; font-size: 24px; font-weight: 700; letter-spacing: -0.5px; line-height: 1.2; margin-bottom: 4px;">
+                                    Junior Philippine Computer Society
+                                </div>
+                                <div class="mono" style="color: #ffffff; font-size: 13px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; opacity: 0.95;">
+                                    UE MANILA CHAPTER
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="pad-container" style="padding: 44px 36px;">
+                                <h2 id="heading" data-field="heading" class="mono" style="margin: 0 0 20px 0; font-size: 20px; font-weight: 600; color: #111111;">
+                                    ${escapeHtml(f.heading)}
+                                </h2>
+                                <p>Hi <strong id="recipientName" data-field="recipientName">${escapeHtml(f.recipientName)}</strong>,</p>
+                                <p>Thank you for joining <strong id="eventTopicIntro" data-field="eventTopic">${escapeHtml(f.eventTopic)}</strong>. We appreciate the time, curiosity, and energy you brought into the session.</p>
+                                <table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin: 24px 0 30px 0;">
+                                    <tr>
+                                        <td style="background: linear-gradient(135deg, #fff5f0 0%, #ffeee6 100%); background-color: #fff5f0; border-left: 4px solid #ff6b35; padding: 20px; border-radius: 0 8px 8px 0;">
+                                            <div class="mono" style="font-size: 15px; font-weight: 700; color: #7c2d12; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 12px;">Event Summary</div>
+                                            <p style="margin: 0 0 8px 0; font-size: 15px; color: #2d3748; text-align: left;"><strong style="color: #1a202c;">Topic:</strong> <span id="eventTopic" data-field="eventTopic">${escapeHtml(f.eventTopic)}</span></p>
+                                            <p style="margin: 0 0 8px 0; font-size: 15px; color: #2d3748; text-align: left;"><strong style="color: #1a202c;">Date:</strong> <span id="eventDate" data-field="eventDateTime">${escapeHtml(dateText)}</span></p>
+                                            <p style="margin: 0 0 8px 0; font-size: 15px; color: #2d3748; text-align: left;"><strong style="color: #1a202c;">Venue:</strong> <span id="eventVenue" data-field="eventVenue">${escapeHtml(f.eventVenue)}</span></p>
+                                            <p style="margin: 0; font-size: 15px; color: #2d3748; text-align: left;"><strong style="color: #1a202c;">Organized by:</strong> <span id="eventOrganizers" data-field="eventOrganizers">${escapeHtml(f.eventOrganizers)}</span></p>
+                                        </td>
+                                    </tr>
+                                </table>
+                                <p id="certMessage" data-field="certMessage">${certHtml}</p>
+                                <p id="closingMessage" data-field="closingMessage">${escapeHtml(f.closingMessage)}</p>
+                                <div style="margin-top: 40px;">
+                                    <p style="margin-bottom: 5px;">Warm regards,</p>
+                                    <p style="margin-bottom: 0;"><strong>JPCS UE Manila Officers</strong></p>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 30px 40px; background-color: #fafafa; border-top: 1px solid #eeeeee; text-align: center; border-bottom-left-radius: 12px; border-bottom-right-radius: 12px;">
+                                <div class="mono" style="margin-bottom: 20px; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: #888888;">
+                                    Connect With Us
+                                </div>
+                                <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin: 0 auto 20px auto;">
+                                    <tr>
+                                        <td style="padding: 0 8px;"><a href="https://www.facebook.com/jpcs.uemanila" target="_blank" style="text-decoration: none;"><img src="https://img.icons8.com/ios-filled/50/718096/facebook-new.png" alt="FB" width="24" height="24" style="display: block;"></a></td>
+                                        <td style="padding: 0 8px;"><a href="https://www.instagram.com/jpcs.uemanila" target="_blank" style="text-decoration: none;"><img src="https://img.icons8.com/ios-filled/50/718096/instagram-new.png" alt="IG" width="24" height="24" style="display: block;"></a></td>
+                                        <td style="padding: 0 8px;"><a href="https://www.linkedin.com/company/107503272/" target="_blank" style="text-decoration: none;"><img src="https://img.icons8.com/ios-filled/50/718096/linkedin.png" alt="IN" width="24" height="24" style="display: block;"></a></td>
+                                        <td style="padding: 0 8px;"><a href="mailto:jpcs.uemanila@gmail.com" target="_blank" style="text-decoration: none;"><img src="https://img.icons8.com/ios-filled/50/718096/mail.png" alt="Email" width="24" height="24" style="display: block;"></a></td>
+                                    </tr>
+                                </table>
+                                <p style="margin-bottom: 4px; font-size: 12px; color: #888888; text-align: center;">2219 C.M. Recto Ave, Sampaloc, Manila</p>
+                                <p style="margin-bottom: 0; font-size: 12px; color: #aaaaaa; text-align: center;">&copy; 2026 JPCS UE Manila. All rights reserved.</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>`;
+    }
+
+    // Inner HTML builder for Membership Template (with data-field attributes and 44px 36px padding)
+    function buildMembershipInnerHtml(f) {
+        return `
+        <div style="display: none; font-size: 1px; line-height: 1px; max-height: 0px; max-width: 0px; opacity: 0; overflow: hidden; font-family: sans-serif;">
+            <span data-field="preheader">${escapeHtml(f.preheader)}</span>
+        </div>
+        <table id="email-table-root" width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f7f7f7; margin: 0; padding: 0; font-family: 'Roboto Condensed', -apple-system, BlinkMacSystemFont, Arial, sans-serif;">
+            <tr>
+                <td align="center" style="padding: 40px 10px;">
+                    <table class="email-container" width="600" border="0" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border: 1px solid #eeeeee; max-width: 600px; width: 100%; border-radius: 12px; overflow: hidden;">
+                        <tr>
+                            <td style="background-color: #f7931e; background: linear-gradient(135deg, #ff6b35 0%, #f7931e 50%, #c41e3a 100%); padding: 35px 30px; text-align: center; border-top-left-radius: 12px; border-top-right-radius: 12px;">
+                                <img id="logoUrl" data-field="logoUrl" src="${escapeHtml(f.logoUrl)}" alt="JPCS Logo" width="75" height="75" style="display: block; margin: 0 auto 14px auto; width: 75px; max-width: 75px; height: 75px; max-height: 75px; border: 0; outline: none;" />
+                                <div style="color: #ffffff; font-family: 'Roboto Condensed', -apple-system, BlinkMacSystemFont, Arial, sans-serif; font-size: 15px; line-height: 1.3; margin-bottom: 2px; font-weight: 300; letter-spacing: 0.2px;">
+                                    University of the East - Manila
+                                </div>
+                                <div style="color: #ffffff; font-family: 'Roboto Condensed', -apple-system, BlinkMacSystemFont, Arial, sans-serif; font-size: 15px; line-height: 1.3; margin-bottom: 8px; font-weight: 300; letter-spacing: 0.2px;">
+                                    College of Computer Studies and Systems
+                                </div>
+                                <div class="mono" style="color: #ffffff; font-size: 24px; font-weight: 700; letter-spacing: -0.5px; line-height: 1.2; margin-bottom: 4px;">
+                                    Junior Philippine Computer Society
+                                </div>
+                                <div class="mono" style="color: #ffffff; font-size: 13px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; opacity: 0.95;">
+                                    UE MANILA CHAPTER
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="pad-container" style="padding: 44px 36px;">
+                                <h2 id="heading" data-field="heading" class="mono" style="margin: 0 0 20px 0; font-size: 20px; font-weight: 600; color: #111111;">
+                                    ${escapeHtml(f.heading)}
+                                </h2>
+                                <p>Hi <strong id="recipientName" data-field="recipientName">${escapeHtml(f.recipientName)}</strong>,</p>
+                                <p>We are delighted to inform you that you have <strong>successfully completed your membership form</strong>! You are now officially a member of the JPCS UE Manila Chapter.</p>
+                                <table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin: 24px 0 30px 0;">
+                                    <tr>
+                                        <td style="background: linear-gradient(135deg, #fff5f0 0%, #ffeee6 100%); background-color: #fff5f0; border-left: 4px solid #ff6b35; padding: 20px; border-radius: 0 8px 8px 0;">
+                                            <div class="mono" style="font-size: 15px; font-weight: 700; color: #7c2d12; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 12px;">Membership Status</div>
+                                            <p style="margin: 0 0 8px 0; font-size: 15px; color: #2d3748; text-align: left;"><strong style="color: #1a202c;">Chapter Membership:</strong> <span id="chapterStatus" data-field="chapterStatus">${escapeHtml(f.chapterStatus)}</span></p>
+                                            <p style="margin: 0 0 8px 0; font-size: 15px; color: #2d3748; text-align: left;"><strong style="color: #1a202c;">National Application:</strong> <span id="nationalStatus" data-field="nationalStatus">${escapeHtml(f.nationalStatus)}</span></p>
+                                            <p style="margin: 0; font-size: 15px; color: #2d3748; text-align: left;"><strong style="color: #1a202c;">Chapter Activities:</strong> <span id="activitiesStatus" data-field="activitiesStatus">${escapeHtml(f.activitiesStatus)}</span></p>
+                                        </td>
+                                    </tr>
+                                </table>
+                                <p id="pendingNote" data-field="pendingNote" style="font-size: 14px; color: #666666; margin-bottom: 30px; font-style: italic;">
+                                    ${escapeHtml(f.pendingNote)}
+                                </p>
+                                <p>Connect with fellow members through our official community channels:</p>
+                                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom: 40px;">
+                                    <tr>
+                                        <td align="center">
+                                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" class="btn-table">
+                                                <tr>
+                                                    <td class="btn-cell" style="padding: 0 10px 0 0;">
+                                                        <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="background-color: #5865F2; border-radius: 50px; width: 100%;">
+                                                            <tr>
+                                                                <td align="center" style="padding: 12px 24px; border-radius: 50px;">
+                                                                    <a id="discordUrl" data-field="discordUrl" href="${escapeHtml(f.discordUrl)}" target="_blank" style="font-family: 'Roboto Mono', Consolas, monospace; font-size: 13px; font-weight: 700; color: #ffffff; text-decoration: none; display: inline-block;">
+                                                                        <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center">
+                                                                            <tr>
+                                                                                <td valign="middle" style="padding-right: 8px;">
+                                                                                    <img src="https://img.icons8.com/ios-filled/50/ffffff/discord-logo.png" alt="Discord" width="16" height="16" style="display: block;">
+                                                                                </td>
+                                                                                <td valign="middle" style="font-family: 'Roboto Mono', Consolas, monospace; font-size: 13px; font-weight: 700; color: #ffffff;">
+                                                                                    JOIN DISCORD
+                                                                                </td>
+                                                                            </tr>
+                                                                        </table>
+                                                                    </a>
+                                                                </td>
+                                                            </tr>
+                                                        </table>
+                                                    </td>
+                                                    <td class="btn-cell" style="padding: 0 0 0 10px;">
+                                                        <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="background-color: #0084FF; border-radius: 50px; width: 100%;">
+                                                            <tr>
+                                                                <td align="center" style="padding: 12px 24px; border-radius: 50px;">
+                                                                    <a id="messengerUrl" data-field="messengerUrl" href="${escapeHtml(f.messengerUrl)}" target="_blank" style="font-family: 'Roboto Mono', Consolas, monospace; font-size: 13px; font-weight: 700; color: #ffffff; text-decoration: none; display: inline-block;">
+                                                                        <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center">
+                                                                            <tr>
+                                                                                <td valign="middle" style="padding-right: 8px;">
+                                                                                    <img src="https://img.icons8.com/ios-filled/50/ffffff/facebook-messenger.png" alt="Messenger" width="16" height="16" style="display: block;">
+                                                                                </td>
+                                                                                <td valign="middle" style="font-family: 'Roboto Mono', Consolas, monospace; font-size: 13px; font-weight: 700; color: #ffffff;">
+                                                                                    JOIN MESSENGER
+                                                                                </td>
+                                                                            </tr>
+                                                                        </table>
+                                                                    </a>
+                                                                </td>
+                                                            </tr>
+                                                        </table>
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                </table>
+                                <p id="closingMessage" data-field="closingMessage">${escapeHtml(f.closingMessage)}</p>
+                                <div style="margin-top: 40px;">
+                                    <p style="margin-bottom: 5px;">Warm regards,</p>
+                                    <p style="margin-bottom: 0;"><strong>JPCS UE Manila Officers</strong></p>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 30px 40px; background-color: #fafafa; border-top: 1px solid #eeeeee; text-align: center; border-bottom-left-radius: 12px; border-bottom-right-radius: 12px;">
+                                <div class="mono" style="margin-bottom: 20px; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: #888888;">
+                                    Connect With Us
+                                </div>
+                                <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin: 0 auto 20px auto;">
+                                    <tr>
+                                        <td style="padding: 0 8px;"><a href="https://www.facebook.com/jpcs.uemanila" target="_blank" style="text-decoration: none;"><img src="https://img.icons8.com/ios-filled/50/718096/facebook-new.png" alt="FB" width="24" height="24" style="display: block;"></a></td>
+                                        <td style="padding: 0 8px;"><a href="https://www.instagram.com/jpcs.uemanila" target="_blank" style="text-decoration: none;"><img src="https://img.icons8.com/ios-filled/50/718096/instagram-new.png" alt="IG" width="24" height="24" style="display: block;"></a></td>
+                                        <td style="padding: 0 8px;"><a href="https://www.linkedin.com/company/107503272/" target="_blank" style="text-decoration: none;"><img src="https://img.icons8.com/ios-filled/50/718096/linkedin.png" alt="IN" width="24" height="24" style="display: block;"></a></td>
+                                        <td style="padding: 0 8px;"><a href="mailto:jpcs.uemanila@gmail.com" target="_blank" style="text-decoration: none;"><img src="https://img.icons8.com/ios-filled/50/718096/mail.png" alt="Email" width="24" height="24" style="display: block;"></a></td>
+                                    </tr>
+                                </table>
+                                <p style="margin-bottom: 4px; font-size: 12px; color: #888888; text-align: center;">2219 C.M. Recto Ave, Sampaloc, Manila</p>
+                                <p style="margin-bottom: 0; font-size: 12px; color: #aaaaaa; text-align: center;">&copy; 2026 JPCS UE Manila. All rights reserved.</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>`;
+    }
+
+    // Full standalone HTML builder for downloads
+    function buildFullEventHtml(f) {
+        return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Attendance - JPCS UE Manila</title>
+    <style type="text/css">
+        @import url('https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@300;400;700&family=Roboto+Mono:wght@400;600&display=swap');
+        body { margin: 0; padding: 0; background-color: #f7f7f7; font-family: 'Roboto Condensed', -apple-system, BlinkMacSystemFont, Arial, sans-serif; color: #333333; }
+        table { border-collapse: collapse; }
+        p { margin: 0 0 20px 0; font-size: 16px; line-height: 1.6; color: #444444; text-align: justify; }
+        strong { color: #111111; font-weight: 700; }
+        .mono { font-family: 'Roboto Mono', Consolas, monospace; }
+        @media only screen and (max-width: 600px) {
+            .email-container { width: 100% !important; border-radius: 0 !important; border: none !important; }
+            .pad-container { padding: 25px 18px !important; }
+        }
+    </style>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f7f7f7;">
+    ${buildEventInnerHtml(f)}
+</body>
+</html>`;
+    }
+
+    function buildFullMembershipHtml(f) {
+        return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Membership Confirmation - JPCS UE Manila</title>
+    <style type="text/css">
+        @import url('https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@300;400;700&family=Roboto+Mono:wght@400;600&display=swap');
+        body { margin: 0; padding: 0; background-color: #f7f7f7; font-family: 'Roboto Condensed', -apple-system, BlinkMacSystemFont, Arial, sans-serif; color: #333333; }
+        table { border-collapse: collapse; }
+        p { margin: 0 0 20px 0; font-size: 16px; line-height: 1.6; color: #444444; text-align: justify; }
+        strong { color: #111111; font-weight: 700; }
+        .mono { font-family: 'Roboto Mono', Consolas, monospace; }
+        @media only screen and (max-width: 600px) {
+            .email-container { width: 100% !important; border-radius: 0 !important; border: none !important; }
+            .pad-container { padding: 25px 18px !important; }
+            .btn-table { width: 100% !important; }
+            .btn-cell { display: block !important; width: 100% !important; padding-bottom: 12px !important; padding-right: 0 !important; }
+        }
+    </style>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f7f7f7;">
+    ${buildMembershipInnerHtml(f)}
+</body>
+</html>`;
+    }
+
+    // Helper to sanitize HTML strings
+    function escapeHtml(str) {
+        if (!str) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
+    // Copy rendered email to clipboard for Gmail
+    function copyForGmail() {
+        const preview = document.getElementById('preview-content');
+        if (!preview) return;
+
+        const selection = window.getSelection();
+        selection.removeAllRanges();
+
+        const range = document.createRange();
+        range.selectNode(preview);
+        selection.addRange(range);
+
+        let copied = false;
+        try {
+            copied = document.execCommand('copy');
+        } catch (e) {
+            copied = false;
+        }
+
+        selection.removeAllRanges();
+
+        if (copied) {
+            showToast('Copied to clipboard. Paste directly into Gmail with Ctrl + V.');
+        } else {
+            try {
+                navigator.clipboard.writeText(preview.innerText);
+                showToast('Plain text copied to clipboard.');
+            } catch (err) {
+                showToast('Unable to copy automatically. Please select and copy manually.');
+            }
+        }
+    }
+
+    // Download standalone HTML file
+    function downloadHtml() {
+        const filename = templateDefs[currentTab].file;
+        const f = state[currentTab];
+        const content = currentTab === 'event' ? buildFullEventHtml(f) : buildFullMembershipHtml(f);
+
+        const blob = new Blob([content], { type: 'text/html' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(a.href);
+        showToast('Downloaded ' + filename);
+    }
+
+    // Reset template to default values
+    function resetToDefaults() {
+        const def = templateDefs[currentTab];
+        for (const section of def.sections) {
+            for (const field of section.fields) {
+                state[currentTab][field.key] = field.default;
+            }
+        }
+        saveToStorage();
+        renderForm();
+        renderPreview();
+        showToast('Reset ' + (currentTab === 'event' ? 'Event' : 'Membership') + ' fields to defaults.');
+    }
+
+    // Attempt to fetch file from server
+    async function loadTemplateFromDisk(tab) {
+        if (!isServer) return false;
+        try {
+            const res = await fetch('./' + templateDefs[tab].file + '?t=' + Date.now());
+            if (!res.ok) throw new Error('File not accessible');
+            const rawHtml = await res.text();
+
+            const match = rawHtml.match(/const\s+emailConfig\s*=\s*(\{[\s\S]*?\});/);
+            if (match) {
+                try {
+                    const parsed = Function('return ' + match[1])();
+                    for (const [k, v] of Object.entries(parsed)) {
+                        if (state[tab][k] === undefined) {
+                            state[tab][k] = v;
+                        }
+                    }
+                } catch (e) {
+                    console.warn('Could not parse emailConfig in ' + templateDefs[tab].file);
+                }
+            }
+
+            state.diskHtml[tab] = rawHtml;
+            return true;
+        } catch (err) {
+            console.warn('Could not load ' + templateDefs[tab].file + ' over HTTP:', err);
+            return false;
+        }
+    }
+
+    // Reload active file from disk
+    async function reloadFromDisk() {
+        if (!isServer) {
+            showToast('Standalone mode: Run start.bat to link live disk files.');
+            return;
+        }
+        const ok = await loadTemplateFromDisk(currentTab);
+        if (ok) {
+            renderForm();
+            renderPreview();
+            showToast('Reloaded ' + templateDefs[currentTab].file + ' from disk.');
+        } else {
+            showToast('Failed to reload ' + templateDefs[currentTab].file);
+        }
+    }
+
+    // Show toast message
+    function showToast(message) {
+        const toast = document.getElementById('toast');
+        toast.textContent = message;
+        toast.style.display = 'block';
+        clearTimeout(window._toastTimeout);
+        window._toastTimeout = setTimeout(() => {
+            toast.style.display = 'none';
+        }, 3500);
+    }
+
+    // Initialize application
+    async function init() {
+        initState();
+
+        if (isServer) {
+            await Promise.all([
+                loadTemplateFromDisk('event'),
+                loadTemplateFromDisk('membership')
+            ]);
+        }
+
+        renderForm();
+        renderPreview();
+    }
+
+    init();
+    </script>
+</body>
+</html>
