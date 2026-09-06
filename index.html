@@ -654,6 +654,159 @@
             color: #dc2626;
         }
 
+        /* Dynamic Tag Manager Styles */
+        .tag-manager-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .tag-item-card {
+            background-color: #f8fafc;
+            border: 1px solid var(--border-soft);
+            border-radius: var(--radius-card);
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .tag-item-card:hover {
+            border-color: #cbd5e1;
+            background-color: #ffffff;
+            box-shadow: 0 4px 14px rgba(35, 47, 70, 0.05);
+        }
+
+        .tag-header-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .tag-label-wrap {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .tag-label-input {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--navy-dark);
+            background-color: #ffffff;
+            border: 1px solid var(--border-soft);
+            border-radius: 6px;
+            padding: 5px 8px;
+            outline: none;
+            width: 135px;
+            max-width: 100%;
+            transition: all 0.2s ease;
+        }
+
+        .tag-label-input:focus {
+            border-color: var(--primary-orange);
+            box-shadow: 0 0 0 2px var(--primary-orange-light);
+        }
+
+        .tag-controls-wrap {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            flex-shrink: 0;
+        }
+
+        .tag-action-btn {
+            background-color: #f1f5f9;
+            border: 1px solid var(--border-soft);
+            border-radius: 6px;
+            color: var(--navy-muted);
+            width: 26px;
+            height: 26px;
+            padding: 0;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s ease;
+        }
+
+        .tag-action-btn:hover:not(:disabled) {
+            background-color: #e2e8f0;
+            color: var(--navy-dark);
+            transform: scale(1.05);
+        }
+
+        .tag-action-btn:disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+        }
+
+        .tag-action-btn.delete-btn:hover {
+            background-color: #fee2e2;
+            border-color: #fca5a5;
+            color: #dc2626;
+        }
+
+        .tag-mode-toggle {
+            display: inline-flex;
+            background-color: #e2e8f0;
+            padding: 2px;
+            border-radius: var(--radius-pill);
+            gap: 2px;
+        }
+
+        .tag-mode-btn {
+            border: none;
+            background: transparent;
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--navy-muted);
+            padding: 3px 8px;
+            border-radius: var(--radius-pill);
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.15s ease;
+        }
+
+        .tag-mode-btn.active {
+            background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+            color: #ffffff;
+            box-shadow: 0 1px 4px rgba(255, 107, 53, 0.3);
+        }
+
+        .btn-add-tag {
+            background-color: #f8fafc;
+            border: 1.5px dashed #cbd5e1;
+            border-radius: var(--radius-card);
+            color: var(--navy-muted);
+            font-size: 13px;
+            font-weight: 700;
+            padding: 10px 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            font-family: inherit;
+            transition: all 0.2s ease;
+            margin-top: 4px;
+        }
+
+        .btn-add-tag:hover {
+            background-color: #ffffff;
+            border-color: var(--primary-orange);
+            color: var(--primary-orange);
+            box-shadow: 0 4px 12px rgba(255, 107, 53, 0.12);
+            transform: translateY(-1px);
+        }
+
         /* Preview Pane with Guaranteed Natural Scroll */
         .preview-pane {
             flex: 1;
@@ -1076,6 +1229,7 @@
         membership: {},
         diskHtml: { event: null, membership: null }
     };
+    window.state = state;
 
     let currentTab = 'event';
     let currentDevice = 'desktop';
@@ -1084,6 +1238,25 @@
     const isServer = window.location.protocol.startsWith('http');
     const STORAGE_KEY = 'jpcs_email_editor_v7';
 
+    function getDefaultEventTags() {
+        return [
+            { id: "eventTopic", label: "Topic", value: "Getting Started with Blockchain: Guided Learning for Career Impact", type: "text" },
+            { id: "eventDateTime", label: "Date", value: "April 6, 2026 (Monday) • 12:00 PM to 4:30 PM", type: "datetime", mode: "picker", dateVal: "2026-04-06", startVal: "12:00", endVal: "16:30" },
+            { id: "eventVenue", label: "Venue", value: "UE Manila Conference Hall", type: "text" },
+            { id: "eventOrganizers", label: "Organized by", value: "JPCS UE Manila × Bitskwela", type: "text" }
+        ];
+    }
+
+    function syncEventTagsToStateProps() {
+        if (!state.event || !state.event.tags) return;
+        for (const tag of state.event.tags) {
+            if (tag.id === 'eventTopic') state.event.eventTopic = tag.value;
+            if (tag.id === 'eventDateTime') state.event.eventDateTime = tag.value;
+            if (tag.id === 'eventVenue') state.event.eventVenue = tag.value;
+            if (tag.id === 'eventOrganizers') state.event.eventOrganizers = tag.value;
+        }
+    }
+
     // Initialize state
     function initState() {
         const saved = loadFromStorage();
@@ -1091,20 +1264,38 @@
         for (const [tabKey, def] of Object.entries(templateDefs)) {
             state[tabKey] = {};
             for (const section of def.sections) {
-                for (const field of section.fields) {
-                    if (saved && saved[tabKey] && saved[tabKey][field.key] !== undefined) {
-                        state[tabKey][field.key] = saved[tabKey][field.key];
-                    } else {
-                        state[tabKey][field.key] = field.default;
+                if (section.fields) {
+                    for (const field of section.fields) {
+                        if (saved && saved[tabKey] && saved[tabKey][field.key] !== undefined) {
+                            state[tabKey][field.key] = saved[tabKey][field.key];
+                        } else {
+                            state[tabKey][field.key] = field.default;
+                        }
                     }
                 }
             }
         }
+
+        // Initialize or restore dynamic tags for Event template
+        if (saved && saved.event && Array.isArray(saved.event.tags)) {
+            state.event.tags = saved.event.tags;
+        } else {
+            const defTags = getDefaultEventTags();
+            if (saved && saved.event) {
+                if (saved.event.eventTopic !== undefined) defTags[0].value = saved.event.eventTopic;
+                if (saved.event.eventDateTime !== undefined) defTags[1].value = saved.event.eventDateTime;
+                if (saved.event.eventVenue !== undefined) defTags[2].value = saved.event.eventVenue;
+                if (saved.event.eventOrganizers !== undefined) defTags[3].value = saved.event.eventOrganizers;
+            }
+            state.event.tags = defTags;
+        }
+        syncEventTagsToStateProps();
     }
 
     // LocalStorage persistence
     function saveToStorage() {
         try {
+            syncEventTagsToStateProps();
             const data = {
                 event: state.event,
                 membership: state.membership
@@ -1272,8 +1463,12 @@
             const body = document.createElement('div');
             body.className = 'section-body';
 
-            for (const field of section.fields) {
-                body.appendChild(createFieldElement(field));
+            if (currentTab === 'event' && section.id === 'details') {
+                body.appendChild(createTagManagerElement());
+            } else if (section.fields) {
+                for (const field of section.fields) {
+                    body.appendChild(createFieldElement(field));
+                }
             }
 
             card.appendChild(body);
@@ -1287,6 +1482,264 @@
         const collapsedCount = document.querySelectorAll('.section-card.collapsed').length;
         allCollapsed = collapsedCount === total;
         updateCollapseAllButton();
+    }
+
+    // Dynamic Tag Manager for Event Summary
+    function createTagManagerElement() {
+        const container = document.createElement('div');
+        container.className = 'tag-manager-container';
+
+        const tags = state.event.tags || [];
+
+        tags.forEach((tag, index) => {
+            const card = document.createElement('div');
+            card.className = 'tag-item-card form-group';
+            card.dataset.fieldKey = tag.id;
+            card.dataset.searchLabel = ((tag.label || '') + ' ' + (tag.value || '')).toLowerCase();
+
+            // 1. Header Row
+            const headerRow = document.createElement('div');
+            headerRow.className = 'tag-header-row';
+
+            const labelWrap = document.createElement('div');
+            labelWrap.className = 'tag-label-wrap';
+
+            // Reorder buttons (Move Up / Move Down)
+            const reorderGroup = document.createElement('div');
+            reorderGroup.style.display = 'inline-flex';
+            reorderGroup.style.gap = '2px';
+
+            const btnUp = document.createElement('button');
+            btnUp.type = 'button';
+            btnUp.className = 'tag-action-btn';
+            btnUp.title = 'Move up';
+            btnUp.disabled = index === 0;
+            btnUp.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>';
+            btnUp.onclick = () => {
+                if (index > 0) {
+                    const temp = state.event.tags[index - 1];
+                    state.event.tags[index - 1] = state.event.tags[index];
+                    state.event.tags[index] = temp;
+                    saveToStorage();
+                    renderForm();
+                    renderPreview();
+                }
+            };
+
+            const btnDown = document.createElement('button');
+            btnDown.type = 'button';
+            btnDown.className = 'tag-action-btn';
+            btnDown.title = 'Move down';
+            btnDown.disabled = index === tags.length - 1;
+            btnDown.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>';
+            btnDown.onclick = () => {
+                if (index < tags.length - 1) {
+                    const temp = state.event.tags[index + 1];
+                    state.event.tags[index + 1] = state.event.tags[index];
+                    state.event.tags[index] = temp;
+                    saveToStorage();
+                    renderForm();
+                    renderPreview();
+                }
+            };
+
+            reorderGroup.appendChild(btnUp);
+            reorderGroup.appendChild(btnDown);
+            labelWrap.appendChild(reorderGroup);
+
+            // Editable Label input
+            const labelInput = document.createElement('input');
+            labelInput.type = 'text';
+            labelInput.className = 'tag-label-input';
+            labelInput.value = tag.label || '';
+            labelInput.placeholder = 'Tag Label';
+            labelInput.title = 'Edit tag label';
+            labelInput.addEventListener('input', (e) => {
+                tag.label = e.target.value;
+                card.dataset.searchLabel = ((tag.label || '') + ' ' + (tag.value || '')).toLowerCase();
+                saveToStorage();
+                schedulePreviewUpdate();
+            });
+            attachHighlightListeners(labelInput, tag.id);
+            labelWrap.appendChild(labelInput);
+
+            headerRow.appendChild(labelWrap);
+
+            // Controls Wrap: Mode toggle if datetime + Delete button
+            const controlsWrap = document.createElement('div');
+            controlsWrap.className = 'tag-controls-wrap';
+
+            if (tag.type === 'datetime') {
+                const modeToggle = document.createElement('div');
+                modeToggle.className = 'tag-mode-toggle';
+
+                const currentMode = tag.mode || 'picker';
+
+                const btnPicker = document.createElement('button');
+                btnPicker.type = 'button';
+                btnPicker.className = 'tag-mode-btn' + (currentMode === 'picker' ? ' active' : '');
+                btnPicker.textContent = 'Picker';
+                btnPicker.onclick = () => {
+                    tag.mode = 'picker';
+                    if (!tag.dateVal) tag.dateVal = '2026-04-06';
+                    if (!tag.startVal) tag.startVal = '12:00';
+                    if (!tag.endVal) tag.endVal = '16:30';
+                    tag.value = formatDateTime(tag.dateVal, tag.startVal, tag.endVal);
+                    saveToStorage();
+                    renderForm();
+                    renderPreview();
+                };
+
+                const btnManual = document.createElement('button');
+                btnManual.type = 'button';
+                btnManual.className = 'tag-mode-btn' + (currentMode === 'manual' ? ' active' : '');
+                btnManual.textContent = 'Text';
+                btnManual.onclick = () => {
+                    tag.mode = 'manual';
+                    saveToStorage();
+                    renderForm();
+                    renderPreview();
+                };
+
+                modeToggle.appendChild(btnPicker);
+                modeToggle.appendChild(btnManual);
+                controlsWrap.appendChild(modeToggle);
+            }
+
+            // Delete button
+            const btnDelete = document.createElement('button');
+            btnDelete.type = 'button';
+            btnDelete.className = 'tag-action-btn delete-btn';
+            btnDelete.title = 'Delete this tag';
+            btnDelete.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>';
+            btnDelete.onclick = () => {
+                state.event.tags.splice(index, 1);
+                saveToStorage();
+                renderForm();
+                renderPreview();
+                showToast('Deleted tag "' + (tag.label || 'Untitled') + '"');
+            };
+            controlsWrap.appendChild(btnDelete);
+
+            headerRow.appendChild(controlsWrap);
+            card.appendChild(headerRow);
+
+            // 2. Value Input Row
+            if (tag.type === 'datetime' && (tag.mode || 'picker') === 'picker') {
+                const dtGrid = document.createElement('div');
+                dtGrid.className = 'datetime-grid';
+
+                const dateWrap = document.createElement('div');
+                dateWrap.className = 'datetime-sub';
+                const dateLabel = document.createElement('label');
+                dateLabel.textContent = 'Date';
+                const dateInput = document.createElement('input');
+                dateInput.type = 'date';
+                dateInput.value = tag.dateVal || '';
+                dateWrap.appendChild(dateLabel);
+                dateWrap.appendChild(dateInput);
+
+                const startWrap = document.createElement('div');
+                startWrap.className = 'datetime-sub';
+                const startLabel = document.createElement('label');
+                startLabel.textContent = 'Start';
+                const startInput = document.createElement('input');
+                startInput.type = 'time';
+                startInput.value = tag.startVal || '';
+                startWrap.appendChild(startLabel);
+                startWrap.appendChild(startInput);
+
+                const endWrap = document.createElement('div');
+                endWrap.className = 'datetime-sub';
+                const endLabel = document.createElement('label');
+                endLabel.textContent = 'End';
+                const endInput = document.createElement('input');
+                endInput.type = 'time';
+                endInput.value = tag.endVal || '';
+                endWrap.appendChild(endLabel);
+                endWrap.appendChild(endInput);
+
+                dtGrid.appendChild(dateWrap);
+                dtGrid.appendChild(startWrap);
+                dtGrid.appendChild(endWrap);
+
+                const note = document.createElement('div');
+                note.className = 'computed-preview-note';
+                note.textContent = tag.value ? tag.value : '(No date selected - tag will be hidden)';
+                if (!tag.value) note.style.opacity = '0.6';
+
+                function syncPicker() {
+                    tag.dateVal = dateInput.value;
+                    tag.startVal = startInput.value;
+                    tag.endVal = endInput.value;
+                    tag.value = formatDateTime(tag.dateVal, tag.startVal, endInput.value);
+                    note.textContent = tag.value ? tag.value : '(No date selected - tag will be hidden)';
+                    note.style.opacity = tag.value ? '1' : '0.6';
+                    card.dataset.searchLabel = ((tag.label || '') + ' ' + (tag.value || '')).toLowerCase();
+                    saveToStorage();
+                    schedulePreviewUpdate();
+                }
+
+                dateInput.addEventListener('input', syncPicker);
+                startInput.addEventListener('input', syncPicker);
+                endInput.addEventListener('input', syncPicker);
+
+                attachHighlightListeners(dateInput, tag.id);
+                attachHighlightListeners(startInput, tag.id);
+                attachHighlightListeners(endInput, tag.id);
+
+                card.appendChild(dtGrid);
+                card.appendChild(note);
+            } else {
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.value = tag.value || '';
+                input.placeholder = 'Enter ' + (tag.label || 'value') + ' (leave empty to hide)...';
+
+                input.addEventListener('input', (e) => {
+                    tag.value = e.target.value;
+                    card.dataset.searchLabel = ((tag.label || '') + ' ' + (tag.value || '')).toLowerCase();
+                    saveToStorage();
+                    schedulePreviewUpdate();
+                });
+
+                attachHighlightListeners(input, tag.id);
+                card.appendChild(input);
+            }
+
+            container.appendChild(card);
+        });
+
+        // 3. "+ Add Tag" Button
+        const btnAdd = document.createElement('button');
+        btnAdd.type = 'button';
+        btnAdd.className = 'btn-add-tag';
+        btnAdd.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Add New Tag';
+        btnAdd.onclick = () => {
+            const newTagId = 'tag_' + Date.now();
+            state.event.tags.push({
+                id: newTagId,
+                label: 'Custom Tag',
+                value: '',
+                type: 'text'
+            });
+            saveToStorage();
+            renderForm();
+            renderPreview();
+            setTimeout(() => {
+                const newCard = container.querySelector(`[data-field-key="${newTagId}"]`);
+                if (newCard) {
+                    const lbl = newCard.querySelector('.tag-label-input');
+                    if (lbl) {
+                        lbl.focus();
+                        lbl.select();
+                    }
+                }
+            }, 60);
+        };
+        container.appendChild(btnAdd);
+
+        return container;
     }
 
     // Create individual field element
@@ -1601,18 +2054,8 @@
 
     // Format Date & Time automatically
     function formatDateTime(dateStr, startStr, endStr) {
-        if (!dateStr) return 'April 6, 2026 (Monday) • 12:00 PM to 4:30 PM';
+        if (!dateStr && !startStr && !endStr) return '';
         try {
-            const parts = dateStr.split('-');
-            const d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
-            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-            const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-            
-            const month = monthNames[d.getMonth()];
-            const day = d.getDate();
-            const year = d.getFullYear();
-            const dayName = dayNames[d.getDay()];
-
             const formatTime = (tStr) => {
                 if (!tStr) return '';
                 const [h, m] = tStr.split(':').map(Number);
@@ -1625,9 +2068,21 @@
             const endFormatted = formatTime(endStr);
             const timePart = startFormatted && endFormatted ? (startFormatted + ' to ' + endFormatted) : (startFormatted || endFormatted);
 
+            if (!dateStr) return timePart;
+
+            const parts = dateStr.split('-');
+            const d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+            
+            const month = monthNames[d.getMonth()];
+            const day = d.getDate();
+            const year = d.getFullYear();
+            const dayName = dayNames[d.getDay()];
+
             return month + ' ' + day + ', ' + year + ' (' + dayName + ')' + (timePart ? (' • ' + timePart) : '');
         } catch (e) {
-            return dateStr + ' • ' + startStr + ' to ' + endStr;
+            return (dateStr || '') + (dateStr && (startStr || endStr) ? ' • ' : '') + (startStr || '') + (startStr && endStr ? ' to ' : '') + (endStr || '');
         }
     }
 
@@ -1692,48 +2147,52 @@
     function renderPreview() {
         const preview = document.getElementById('preview-content');
         const f = state[currentTab];
-        const diskHtml = state.diskHtml[currentTab];
-
-        if (diskHtml) {
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(diskHtml, 'text/html');
-
-            for (const [key, rawVal] of Object.entries(f)) {
-                const el = doc.getElementById(key);
-                if (el) {
-                    el.setAttribute('data-field', key);
-                    if (el.tagName === 'IMG') {
-                        el.src = rawVal;
-                    } else if (el.tagName === 'A') {
-                        el.href = rawVal;
-                    } else {
-                        el.innerHTML = rawVal;
-                    }
-                }
-            }
-
-            const introTopic = doc.getElementById('eventTopicIntro');
-            if (introTopic && f.eventTopic) {
-                introTopic.setAttribute('data-field', 'eventTopic');
-                introTopic.innerHTML = f.eventTopic;
-            }
-
-            const dtEl = doc.getElementById('eventDate');
-            if (dtEl && f.eventDateTime) {
-                dtEl.setAttribute('data-field', 'eventDateTime');
-                dtEl.innerHTML = f.eventDateTime;
-            }
-
-            preview.innerHTML = doc.body.innerHTML;
-        } else {
-            preview.innerHTML = currentTab === 'event' ? buildEventInnerHtml(f) : buildMembershipInnerHtml(f);
-        }
+        preview.innerHTML = currentTab === 'event' ? buildEventInnerHtml(f) : buildMembershipInnerHtml(f);
     }
 
     // Inner HTML builder for Event Template (with data-field attributes and 44px 36px padding)
     function buildEventInnerHtml(f) {
-        const dateText = f.eventDateTime || f.eventDate || 'April 6, 2026 (Monday) • 12:00 PM to 4:30 PM';
         const certHtml = f.certMessage || 'As promised, your <strong>Certificate of Participation</strong> is attached to this email.';
+
+        // Determine opening sentence topic text
+        const topicTag = (f.tags || []).find(t => t.id === 'eventTopic' || (t.label && t.label.toLowerCase() === 'topic'));
+        let topicVal = '';
+        if (topicTag) {
+            topicVal = (topicTag.value || '').trim();
+        } else if (f.eventTopic) {
+            topicVal = (f.eventTopic || '').trim();
+        }
+        const topicHtml = topicVal 
+            ? `<strong id="eventTopicIntro" data-field="eventTopic">${escapeHtml(topicVal)}</strong>` 
+            : 'our event';
+
+        // Filter non-empty tags for the Event Summary box
+        const tags = (f.tags && f.tags.length > 0) ? f.tags : [
+            { id: "eventTopic", label: "Topic", value: f.eventTopic || "" },
+            { id: "eventDateTime", label: "Date", value: f.eventDateTime || f.eventDate || "" },
+            { id: "eventVenue", label: "Venue", value: f.eventVenue || "" },
+            { id: "eventOrganizers", label: "Organized by", value: f.eventOrganizers || "" }
+        ];
+        const activeTags = tags.filter(t => t && t.value && t.value.trim() !== '');
+
+        let eventSummaryBoxHtml = '';
+        if (activeTags.length > 0) {
+            const tagsRowsHtml = activeTags.map((tag, idx) => {
+                const isLast = idx === activeTags.length - 1;
+                const mb = isLast ? '0' : '8px';
+                return `<p style="margin: 0 0 ${mb} 0; font-size: 15px; color: #2d3748; text-align: left;"><strong style="color: #1a202c;">${escapeHtml(tag.label)}:</strong> <span id="${escapeHtml(tag.id)}" data-field="${escapeHtml(tag.id)}">${escapeHtml(tag.value)}</span></p>`;
+            }).join('');
+
+            eventSummaryBoxHtml = `
+                                <table id="eventSummaryTable" width="100%" border="0" cellspacing="0" cellpadding="0" style="margin: 24px 0 30px 0;">
+                                    <tr>
+                                        <td style="background: linear-gradient(135deg, #fff5f0 0%, #ffeee6 100%); background-color: #fff5f0; border-left: 4px solid #ff6b35; padding: 20px; border-radius: 0 8px 8px 0;">
+                                            <div class="mono" style="font-size: 15px; font-weight: 700; color: #7c2d12; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 12px;">Event Summary</div>
+                                            ${tagsRowsHtml}
+                                        </td>
+                                    </tr>
+                                </table>`;
+        }
 
         return `
         <div style="display: none; font-size: 1px; line-height: 1px; max-height: 0px; max-width: 0px; opacity: 0; overflow: hidden; font-family: sans-serif;">
@@ -1766,18 +2225,8 @@
                                     ${escapeHtml(f.heading)}
                                 </h2>
                                 <p>Hi <strong id="recipientName" data-field="recipientName">${escapeHtml(f.recipientName)}</strong>,</p>
-                                <p>Thank you for joining <strong id="eventTopicIntro" data-field="eventTopic">${escapeHtml(f.eventTopic)}</strong>. We appreciate the time, curiosity, and energy you brought into the session.</p>
-                                <table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin: 24px 0 30px 0;">
-                                    <tr>
-                                        <td style="background: linear-gradient(135deg, #fff5f0 0%, #ffeee6 100%); background-color: #fff5f0; border-left: 4px solid #ff6b35; padding: 20px; border-radius: 0 8px 8px 0;">
-                                            <div class="mono" style="font-size: 15px; font-weight: 700; color: #7c2d12; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 12px;">Event Summary</div>
-                                            <p style="margin: 0 0 8px 0; font-size: 15px; color: #2d3748; text-align: left;"><strong style="color: #1a202c;">Topic:</strong> <span id="eventTopic" data-field="eventTopic">${escapeHtml(f.eventTopic)}</span></p>
-                                            <p style="margin: 0 0 8px 0; font-size: 15px; color: #2d3748; text-align: left;"><strong style="color: #1a202c;">Date:</strong> <span id="eventDate" data-field="eventDateTime">${escapeHtml(dateText)}</span></p>
-                                            <p style="margin: 0 0 8px 0; font-size: 15px; color: #2d3748; text-align: left;"><strong style="color: #1a202c;">Venue:</strong> <span id="eventVenue" data-field="eventVenue">${escapeHtml(f.eventVenue)}</span></p>
-                                            <p style="margin: 0; font-size: 15px; color: #2d3748; text-align: left;"><strong style="color: #1a202c;">Organized by:</strong> <span id="eventOrganizers" data-field="eventOrganizers">${escapeHtml(f.eventOrganizers)}</span></p>
-                                        </td>
-                                    </tr>
-                                </table>
+                                <p>Thank you for joining ${topicHtml}. We appreciate the time, curiosity, and energy you brought into the session.</p>
+                                ${eventSummaryBoxHtml}
                                 <p id="certMessage" data-field="certMessage">${certHtml}</p>
                                 <p id="closingMessage" data-field="closingMessage">${escapeHtml(f.closingMessage)}</p>
                                 <div style="margin-top: 40px;">
@@ -2054,9 +2503,15 @@
     function resetToDefaults() {
         const def = templateDefs[currentTab];
         for (const section of def.sections) {
-            for (const field of section.fields) {
-                state[currentTab][field.key] = field.default;
+            if (section.fields) {
+                for (const field of section.fields) {
+                    state[currentTab][field.key] = field.default;
+                }
             }
+        }
+        if (currentTab === 'event') {
+            state.event.tags = getDefaultEventTags();
+            syncEventTagsToStateProps();
         }
         saveToStorage();
         renderForm();
@@ -2077,7 +2532,11 @@
                 try {
                     const parsed = Function('return ' + match[1])();
                     for (const [k, v] of Object.entries(parsed)) {
-                        if (state[tab][k] === undefined) {
+                        if (k === 'tags' && tab === 'event' && Array.isArray(v)) {
+                            if (!state.event.tags || state.event.tags.length === 0) {
+                                state.event.tags = v;
+                            }
+                        } else if (state[tab][k] === undefined) {
                             state[tab][k] = v;
                         }
                     }
@@ -2102,6 +2561,19 @@
         }
         const ok = await loadTemplateFromDisk(currentTab);
         if (ok) {
+            if (currentTab === 'event' && state.diskHtml.event) {
+                const match = state.diskHtml.event.match(/const\s+emailConfig\s*=\s*(\{[\s\S]*?\});/);
+                if (match) {
+                    try {
+                        const parsed = Function('return ' + match[1])();
+                        if (Array.isArray(parsed.tags)) {
+                            state.event.tags = parsed.tags;
+                            syncEventTagsToStateProps();
+                        }
+                    } catch (e) {}
+                }
+            }
+            saveToStorage();
             renderForm();
             renderPreview();
             showToast('Reloaded ' + templateDefs[currentTab].file + ' from disk.');

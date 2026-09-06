@@ -14,6 +14,12 @@
         preheader: "Thank you for joining Getting Started with Blockchain! Your Certificate of Participation is attached.",
         heading: "Thank You for Attending",
         recipientName: "Bryan D. Esico",
+        tags: [
+            { id: "eventTopic", label: "Topic", value: "Getting Started with Blockchain: Guided Learning for Career Impact", type: "text" },
+            { id: "eventDate", label: "Date", value: "April 6, 2026 (Monday) • 12:00 PM to 4:30 PM", type: "datetime" },
+            { id: "eventVenue", label: "Venue", value: "UE Manila Conference Hall", type: "text" },
+            { id: "eventOrganizers", label: "Organized by", value: "JPCS UE Manila × Bitskwela", type: "text" }
+        ],
         eventTopic: "Getting Started with Blockchain: Guided Learning for Career Impact",
         eventDate: "April 6, 2026 (Monday) • 12:00 PM to 4:30 PM",
         eventVenue: "UE Manila Conference Hall",
@@ -102,7 +108,7 @@
                             <p>Thank you for joining <strong id="eventTopicIntro">Getting Started with Blockchain: Guided Learning for Career Impact</strong>. We appreciate the time, curiosity, and energy you brought into the session.</p>
 
                             <!-- Event summary -->
-                            <table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin: 24px 0 30px 0;">
+                            <table id="eventSummaryTable" width="100%" border="0" cellspacing="0" cellpadding="0" style="margin: 24px 0 30px 0;">
                                 <tr>
                                     <td style="background: linear-gradient(135deg, #fff5f0 0%, #ffeee6 100%); background-color: #fff5f0; border-left: 4px solid #ff6b35; padding: 20px; border-radius: 0 8px 8px 0;">
                                         <div class="mono" style="font-size: 15px; font-weight: 700; color: #7c2d12; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 12px;">Event Summary</div>
@@ -185,6 +191,7 @@
     document.addEventListener('DOMContentLoaded', function() {
         if (typeof emailConfig === 'undefined') return;
         for (const [key, value] of Object.entries(emailConfig)) {
+            if (key === 'tags') continue;
             const element = document.getElementById(key);
             if (element) {
                 if (element.tagName === 'IMG') {
@@ -194,9 +201,56 @@
                 }
             }
         }
+
+        // Render dynamic event tags & auto-hide empty tags
+        const summaryTable = document.getElementById('eventSummaryTable');
+        if (summaryTable) {
+            let tags = emailConfig.tags;
+            if (!tags) {
+                tags = [
+                    { id: "eventTopic", label: "Topic", value: emailConfig.eventTopic },
+                    { id: "eventDate", label: "Date", value: emailConfig.eventDate },
+                    { id: "eventVenue", label: "Venue", value: emailConfig.eventVenue },
+                    { id: "eventOrganizers", label: "Organized by", value: emailConfig.eventOrganizers }
+                ];
+            }
+            const activeTags = tags.filter(t => t && t.value && t.value.trim() !== '');
+            if (activeTags.length === 0) {
+                summaryTable.style.display = 'none';
+            } else {
+                summaryTable.style.display = '';
+                const td = summaryTable.querySelector('td');
+                if (td) {
+                    td.innerHTML = `
+                        <div class="mono" style="font-size: 15px; font-weight: 700; color: #7c2d12; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 12px;">Event Summary</div>
+                        ${activeTags.map((tag, idx) => {
+                            const isLast = idx === activeTags.length - 1;
+                            const mb = isLast ? '0' : '8px';
+                            return `<p style="margin: 0 0 ${mb} 0; font-size: 15px; color: #2d3748; text-align: left;"><strong style="color: #1a202c;">${tag.label}:</strong> <span id="${tag.id}">${tag.value}</span></p>`;
+                        }).join('')}
+                    `;
+                }
+            }
+        }
+
+        // Sync opening sentence with topic
         const introTopic = document.getElementById('eventTopicIntro');
-        if (introTopic && emailConfig.eventTopic) {
-            introTopic.innerHTML = emailConfig.eventTopic;
+        if (introTopic) {
+            const topicTag = emailConfig.tags ? emailConfig.tags.find(t => t.id === 'eventTopic' || (t.label && t.label.toLowerCase() === 'topic')) : null;
+            let topicVal = '';
+            if (topicTag) {
+                topicVal = (topicTag.value || '').trim();
+            } else if (emailConfig.eventTopic) {
+                topicVal = (emailConfig.eventTopic || '').trim();
+            }
+            if (topicVal) {
+                introTopic.innerHTML = topicVal;
+            } else {
+                const p = introTopic.parentElement;
+                if (p) {
+                    p.innerHTML = 'Thank you for joining our event. We appreciate the time, curiosity, and energy you brought into the session.';
+                }
+            }
         }
     });
     </script>
